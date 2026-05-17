@@ -141,11 +141,12 @@ def clean_svi():
     return svi_clean
 
 
-## Clean County Health Rankings Dataset
+# Clean County Health Rankings Dataset
 def clean_county_health_rankings():
     # Read the County Health Rankings csv file.
+    # This file is tab-separated, so we use sep="\t".
     # Also, reads the FIPS column as string.
-    chr_data = pd.read_csv(CHR_FILE, dtype={"FIPS": str})
+    chr_data = pd.read_csv(CHR_FILE, sep="\t", dtype={"FIPS": str})
 
     # Clean column names by removing extra spaces
     # Example: " FIPS " becomes "FIPS"
@@ -158,45 +159,43 @@ def clean_county_health_rankings():
     # Apply the clean_fips function on FIPS column
     chr_data["FIPS"] = chr_data["FIPS"].apply(clean_fips)
 
-
+    # Keep only Mississippi county rows.
+    # Mississippi FIPS codes start with 28.
+    chr_data = chr_data[chr_data["FIPS"].str.startswith("28")].copy()
 
     # Keep only useful columns
     # Converts the column names to something easily understandable
     # pct means percentage
-    desired_columns = {
+    columns_to_keep = {
         "FIPS": "county_fips",
         "County": "county_name",
 
         # Maternal/infant outcome indicator
         # This is useful because low birth weight is directly related to infant health
-        "Low Birthweight": "low_birth_weight_pct",
-        "Low Birth Weight": "low_birth_weight_pct",
+        "% Low Birth Weight": "low_birth_weight_pct",
 
-        # Healthcare access / resource barrier indicators
-        "Uninsured": "uninsured_chr_pct",
-        "Primary Care Physicians": "primary_care_physicians_rate",
-        "Mental Health Providers": "mental_health_providers_rate",
-        "Severe Housing Problems": "severe_housing_problems_pct",
-        "Children in Poverty": "children_in_poverty_pct",
+        # Healthcare access indicators
+        "# Uninsured": "uninsured_count",
+        "% Uninsured": "uninsured_chr_pct",
+        "# Primary Care Physicians": "primary_care_physicians_count",
+        "Primary Care Physicians Rate": "primary_care_physicians_rate",
+        "Primary Care Physicians Ratio": "primary_care_physicians_ratio",
+        "# Mental Health Providers": "mental_health_providers_count",
+        "Mental Health Provider Rate": "mental_health_providers_rate",
+        "Mental Health Provider Ratio": "mental_health_providers_ratio",
+
+        # Community resource / barrier indicators
+        "% Severe Housing Problems": "severe_housing_problems_pct",
+        "Severe Housing Cost Burden": "severe_housing_cost_burden_pct",
+        "% Children in Poverty": "children_in_poverty_pct",
         "Food Environment Index": "food_environment_index",
-        "Broadband Access": "broadband_access_pct",
-        "Unemployment": "unemployment_chr_pct",
-        "Child Care Cost Burden": "child_care_cost_burden_pct",
+        "% Households with Broadband Access": "broadband_access_pct",
+        "# Households with Broadband Access": "broadband_access_count",
+        "% Household Income Required for Child Care Expenses": "child_care_cost_burden_pct",
     }
 
-    # Checks which desired columns actually exist in the dataset
-    # This prevents the code from crashing if a column name is slightly different
-    existing_columns = {
-        old: new for old, new in desired_columns.items()
-        if old in chr_data.columns
-    }
-
-    # Rename columns and keep only the columns that exist
-    chr_clean = chr_data[list(existing_columns.keys())].rename(columns=existing_columns)
-
-    # If both "Low Birthweight" and "Low Birth Weight" existed,
-    # this removes duplicate renamed columns
-    chr_clean = chr_clean.loc[:, ~chr_clean.columns.duplicated()]
+    # Rename columns and keep only the columns listed above
+    chr_clean = chr_data[list(columns_to_keep.keys())].rename(columns=columns_to_keep)
 
     # Creates the csv file of chr_clean
     output_path = CLEAN_DIR / "chr_clean.csv"
@@ -210,24 +209,34 @@ def clean_county_health_rankings():
     return chr_clean
 
 
-# -----------------------------
-# 4. Create master joined table
-# -----------------------------
+# Create one master table by joining the cleaned datasets
 def create_master_table(places_clean, svi_clean, chr_clean):
     print("Creating master joined table...")
 
+    # Join CDC PLACES with SVI using county_fips
+    # county_name is dropped from SVI because PLACES already has county_name
     master = places_clean.merge(
         svi_clean.drop(columns=["county_name"], errors="ignore"),
         on="county_fips",
         how="left"
     )
 
+    # Join the result with County Health Rankings using county_fips
+    # county_name is dropped from CHR because PLACES already has county_name
     master = master.merge(
         chr_clean.drop(columns=["county_name"], errors="ignore"),
         on="county_fips",
         how="left"
     )
 
+    # Check if any counties did not match during the joins
+    missing_svi = master["svi_overall"].isna().sum()
+    missing_chr = master["low_birth_weight_pct"].isna().sum()
+
+    print(f"Counties missing SVI data: {missing_svi}")
+    print(f"Counties missing County Health Rankings data: {missing_chr}")
+
+    # Save the final joined table as a CSV file
     output_path = CLEAN_DIR / "county_health_priority_base.csv"
     master.to_csv(output_path, index=False)
 
