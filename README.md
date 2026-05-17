@@ -397,16 +397,15 @@ Equal weighting was used for transparency. Future work could test alternative we
 
 ---
 
-## How This Project Meets the Hackathon Requirements
+## Project Characteristics
 
-| Requirement | How This Project Meets It |
+| Requirement | Characteristics |
 |---|---|
 | Data organization and database design | Cleaned three public datasets, standardized FIPS, designed SQLite tables, and created joined master data |
 | SQL and data querying | Built SQL database and wrote queries for ranking, comparison, and risk overlap analysis |
 | Analysis and insights | Identified Mississippi counties where maternal/infant risk overlaps with chronic disease, vulnerability, and access barriers |
 | Visualization | Created bar charts, scatterplots, static county map, and interactive hover map |
-| Presentation readiness | Outputs are designed for a 6-minute explanation to technical and non-technical audiences |
-| Creativity and initiative | Created a custom Maternal-Infant Priority Index and county report card |
+| Initiative | Created a custom Maternal-Infant Priority Index and county report card |
 | Bonus considerations | Includes data cleaning workflow, SQL database, statistical scoring, interactive visualization, geographic map, and contextual analysis |
 
 ---
