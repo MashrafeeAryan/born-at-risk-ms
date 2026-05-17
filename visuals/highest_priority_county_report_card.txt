@@ -1,0 +1,27 @@
+
+Born at Risk: County Report Card
+
+County: Humphreys
+
+Priority Level: Critical Priority
+Final Priority Score: 92.22
+
+Domain Scores:
+Maternal/Infant Outcome Score: 98.78
+Chronic Disease Score: 90.24
+Social Vulnerability Score: 100.0
+Access/Resource Barrier Score: 79.85
+
+Selected Indicators:
+Low Birth Weight %: 19
+SVI Overall: 1.0
+Diabetes %: 23.7
+Obesity %: 50.6
+Uninsured %: 14.3
+Children in Poverty %: 47
+No Vehicle %: 12.2
+
+Interpretation:
+This county ranks as a high-priority location because multiple risk domains overlap.
+The score does not predict individual medical risk. It identifies county-level public health burden
+and helps guide where maternal and infant health support may be needed first.

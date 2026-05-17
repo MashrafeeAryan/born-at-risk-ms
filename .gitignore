@@ -1,0 +1,18 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.env
+
+# SQLite database files
+*.db
+*.sqlite
+
+# Ignore raw large datasets
+data_raw/tl_2024_us_county/
+data_raw/tl_2024_us_county.zip
