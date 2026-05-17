@@ -38,8 +38,8 @@ def clean_fips(value):
 
     #Converts the value/FIPS number into text or string
     try:
-        return str(int(float(value)))
-    #If FIPS column doesn't have a specifc number, we just return five zeros
+        return str(int(float(value))).zfill(5)
+    #If FIPS column doesn't have a specifc number, we just return five values
     except ValueError:
         return str(value).strip().zfill(5)
 
