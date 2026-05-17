@@ -141,45 +141,38 @@ def clean_svi():
     return svi_clean
 
 
-# -----------------------------
-# 3. Clean County Health Rankings
-# -----------------------------
+## Clean County Health Rankings Dataset
 def clean_county_health_rankings():
-    chr_file = find_file("County Health Rankings", ".xlsx")
-    print(f"Loading County Health Rankings file: {chr_file.name}")
+    # Read the County Health Rankings csv file.
+    # Also, reads the FIPS column as string.
+    chr_data = pd.read_csv(CHR_FILE, dtype={"FIPS": str})
 
-    sheet_name = "Select Measure Data"
-
-    header_row = find_header_row_for_excel(chr_file, sheet_name, header_keyword="FIPS")
-
-    chr_data = pd.read_excel(
-        chr_file,
-        sheet_name=sheet_name,
-        header=header_row,
-        dtype={"FIPS": str}
-    )
-
-    # Clean column names by stripping extra spaces
+    # Clean column names by removing extra spaces
+    # Example: " FIPS " becomes "FIPS"
     chr_data.columns = chr_data.columns.astype(str).str.strip()
 
-    # Sometimes there may be blank rows
+    # Sometimes there may be blank rows.
+    # This removes rows where FIPS is missing.
     chr_data = chr_data.dropna(subset=["FIPS"])
 
-    # Keep only Mississippi counties, not state summary row if present
+    # Apply the clean_fips function on FIPS column
     chr_data["FIPS"] = chr_data["FIPS"].apply(clean_fips)
-    chr_data = chr_data[chr_data["FIPS"].str.startswith("28")].copy()
 
-    # These columns may differ slightly depending on the file.
-    # The script checks which ones exist before selecting.
+
+
+    # Keep only useful columns
+    # Converts the column names to something easily understandable
+    # pct means percentage
     desired_columns = {
         "FIPS": "county_fips",
         "County": "county_name",
 
         # Maternal/infant outcome indicator
+        # This is useful because low birth weight is directly related to infant health
         "Low Birthweight": "low_birth_weight_pct",
         "Low Birth Weight": "low_birth_weight_pct",
 
-        # Access/resource barriers
+        # Healthcare access / resource barrier indicators
         "Uninsured": "uninsured_chr_pct",
         "Primary Care Physicians": "primary_care_physicians_rate",
         "Mental Health Providers": "mental_health_providers_rate",
@@ -191,16 +184,21 @@ def clean_county_health_rankings():
         "Child Care Cost Burden": "child_care_cost_burden_pct",
     }
 
+    # Checks which desired columns actually exist in the dataset
+    # This prevents the code from crashing if a column name is slightly different
     existing_columns = {
         old: new for old, new in desired_columns.items()
         if old in chr_data.columns
     }
 
+    # Rename columns and keep only the columns that exist
     chr_clean = chr_data[list(existing_columns.keys())].rename(columns=existing_columns)
 
-    # If both Low Birthweight and Low Birth Weight existed, remove duplicate columns
+    # If both "Low Birthweight" and "Low Birth Weight" existed,
+    # this removes duplicate renamed columns
     chr_clean = chr_clean.loc[:, ~chr_clean.columns.duplicated()]
 
+    # Creates the csv file of chr_clean
     output_path = CLEAN_DIR / "chr_clean.csv"
     chr_clean.to_csv(output_path, index=False)
 
